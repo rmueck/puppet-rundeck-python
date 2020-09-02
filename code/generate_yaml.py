@@ -40,7 +40,7 @@ def generate_yaml(path, filehandle, node):
         sys.exit(1)
     else:
         with open(conf_file, 'r') as ymlconf:
-            cfg = yaml.load(ymlconf)
+            cfg = yaml.load(ymlconf, Loader=yaml.SafeLoader)
 
     tmp_file = cfg['tmp_file']
     tags_list = cfg['tags_list']
@@ -52,7 +52,7 @@ def generate_yaml(path, filehandle, node):
     else:
         cut_line_1(path,tmp_file)
         f = open(tmp_file, 'r')
-        yaml_data = yaml.load(f)
+        yaml_data = yaml.load(f, Loader=yaml.SafeLoader )
         tags = []
 
         try:
@@ -68,7 +68,7 @@ def generate_yaml(path, filehandle, node):
                     logv('tag %s is not part of your keys' % tag)
 
             d = {lookup_yaml(yaml_data,cfg['yamlstruct']['node_name'],node):sub_dict}
-            
+
             yaml.dump(d, filehandle, default_flow_style=False)
         except TypeError:
             log('ERROR: TypeError caught, skipping node %s.' % node)

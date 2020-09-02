@@ -19,6 +19,6 @@ def add_nodes(filehandle):
     else:
         log("adding nodes from file: %s" % conf_file)
         f = open(conf_file, 'r')
-        d = yaml.load(f)
+        d = yaml.load(f, Loader=yaml.SafeLoader)
 
         yaml.dump(d, filehandle, default_flow_style=False)
