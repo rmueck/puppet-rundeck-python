@@ -2,6 +2,15 @@
 
 Feed Rundeck with Puppet nodes.
 
+This is a fork from https://github.com/virtual-expo/puppet-rundeck-python
+
+I had to slightly modify the original code, because it did not produce the expected output for *Rundeck*:
+
+- Change `parameters` to `values` in config
+- Change default input directory to `/opt/puppetlabs/server/data/puppetserver/yaml/facts`
+- Adding the `Loader=yaml.SafeLoader` to all `yaml.load` statements (see https://github.com/yaml/pyyaml/wiki/PyYAML-yaml.load(input)-Deprecation)
+
+
 This Python script reads into the Puppet Master filesystem and produces a yaml file containing up-to-date nodes information. The nodes description is based on Puppet facts and reads from the yaml node reports written by puppet. The output file respects [Rundeck resource yaml format](http://rundeck.org/docs/man5/resource-yaml.html). Facts (custom or not) can be added at will, and are then available in Rundeck Node Filter.
 
 The final yaml file should be exposed to an internal address, used as a URL Source in Rundeck Project Nodes configuration.
@@ -23,7 +32,7 @@ cp conf/conf_example.yaml conf/conf.yaml
 Name | Description | Default
 --- | --- | ---
 `-o, --outfile` | **Required:** output yaml file |
-`-i, --inputdir` | input directory containg puppet nodes yaml files | `/var/lib/puppet/yaml/node`
+`-i, --inputdir` | input directory containg puppet nodes yaml files | `/opt/puppetlabs/server/data/puppetserver/yaml/facts`
 `-m, --maxage` | max age of input node files (days) | 7
 
 
@@ -55,26 +64,29 @@ Assuming your configuration file `conf/conf.yaml` is the following:
 ---
 tmp_file: /tmp/tmpfile.yaml
 tags_list:
-  - lsbdistcodename
+  - osFamily
+  - osVersion
+  - virtual
   - customfact
 
 yamlstruct:
-  node_name: parameters.hostname
+  node_name: values.hostname
   keys:
     hostname: name
-    osFamily: parameters.osfamily
-    osVersion: parameters.os.release.full
-    osName: parameters.os.lsb.distdescription
-    osArch: parameters.architecture
-    lsbdistcodename: parameters.lsbdistcodename
-    customfact: parameters.mycustomfact
+    osArch: values.architecture
+    osFamily: values.osfamily
+    osVersion: values.os.release.full
+    osName: values.os.distro.description
+    customfact: values.customfact
+    virtual: values.virtual
+    username: values.identity.user
 ```
 
-and the script reads from puppet node directory (`/var/lib/puppet/yaml/node` by default) the file `mynode.yaml` which contains:
+and the script reads from puppet node directory (`/opt/puppetlabs/server/data/puppetserver/yaml/facts` by default) the file `mynode.yaml` which contains:
 ```yaml
 name: mynode
 parameters:
-  hostname: example_node
+  hostname: mynode
   osfamily: Debian
   os:
     release:
@@ -83,21 +95,27 @@ parameters:
       distdescription: Debian GNU/Linux 9.4 (stretch)
   architecture: amd64
   lsbdistcodename: stretch
-  mycustomfact: mycustomvalue
+  mycustomfact: customvalue
+  username: root
 [...]
 ```
 
 the output block describing this node will read:
 ```yaml
-example_node:
-  hostname: mynode
-  osFamily: Debian
-  osVersion: '9.4'
-  osName: Debian GNU/Linux 9.4 (stretch)
+mynode:
+  customfact: myCustomValue
+  hostname: mynode.local.domain
   osArch: amd64
-  lsbdistcodename: stretch
-  customfact: mycustomvalue
-  tags: stretch, mycustomvalue
+  osFamily: Debian
+  osName: Debian GNU/Linux 10 (buster)
+  osVersion: '10.4'
+  tags:
+  - Debian
+  - '10.4'
+  - hyperv
+  - myCustomValue
+  virtual: hyperv
+  username: root
 ```
 
 Each of the fields of the output block can be queried by Rundeck Node Filter.

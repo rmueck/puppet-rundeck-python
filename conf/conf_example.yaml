@@ -1,16 +1,19 @@
 ---
 tmp_file: /tmp/tmpfile.yaml
 tags_list:
-  - lsbdistcodename
+  - osFamily
+  - osVersion  
+  - virtual  
   - customfact
 
 yamlstruct:
-  node_name: parameters.hostname
+  node_name: values.hostname
   keys:
     hostname: name
-    osFamily: parameters.osfamily
-    osVersion: parameters.os.release.full
-    osName: parameters.os.lsb.distdescription
-    osArch: parameters.architecture
-    lsbdistcodename: parameters.lsbdistcodename
-    customfact: parameters.customfact
+    osArch: values.architecture
+    osFamily: values.osfamily
+    osVersion: values.os.release.full
+    osName: values.os.distro.description
+    customfact: values.customfact
+    virtual: values.virtual
+    username: values.identity.user
